@@ -19,13 +19,18 @@ for (const s of sermons) {
 }
 ---
 
-<Base title="Library" activeNav="library" description={`Browse ${sermons.length} Impact Church sermon recaps by date, title, or tag.`}>
+<Base
+  title="Search All Impact Church Sermon Recaps"
+  activeNav="library"
+  description="Search Impact Church sermon recaps. Filter by tag, sort by date or title, and open any message for the summary, verses, and six-day action plan."
+>
   <div class="brand">
     <div class="container library-brand-spacer"></div>
   </div>
 
   <div class="main-news">
     <div class="container" data-library data-page-size="24">
+      <h1 class="library-title">Sermon library</h1>
       <div class="library-controls row align-items-end mb-4" data-library-controls hidden>
         <div class="col-md-6 mb-3">
           <label class="sr-only" for="librarySearch">Search</label>
@@ -55,7 +60,7 @@ for (const s of sermons) {
         </div>
       </div>
 
-      <p class="library-results-count mb-3" data-library-count hidden></p>
+      <p class="library-results-count mb-3" data-library-count hidden aria-live="polite"></p>
       <div class="library-results" data-library-results></div>
 
       <div class="library-source" data-library-source>

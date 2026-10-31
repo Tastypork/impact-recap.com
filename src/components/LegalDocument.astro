@@ -1,0 +1,21 @@
+---
+import Base from "../layouts/Base.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  updated: string;
+}
+
+const { title, description, updated } = Astro.props;
+---
+
+<Base title={title} description={description}>
+  <article class="legal-document">
+    <div class="container">
+      <h1>{title}</h1>
+      <p class="legal-updated">Last updated {updated}</p>
+      <slot />
+    </div>
+  </article>
+</Base>

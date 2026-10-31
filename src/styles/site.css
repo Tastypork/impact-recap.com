@@ -11,6 +11,16 @@
     }
 }
 
+.navbar-toggler {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.nav-bar .social a {
+    width: 44px;
+    height: 44px;
+}
+
 /* Back-to-top toggles .is-visible instead of jQuery fadeIn/fadeOut. */
 .back-to-top.is-visible {
     display: block;
@@ -85,10 +95,42 @@
     cursor: default;
 }
 
+/* Title overlays cover the thumbnail. Let clicks reach the image link; keep the caption link itself clickable. */
+.top-news .tn-title,
+.cat-news .cn-title,
+.main-news .mn-title {
+    pointer-events: none;
+}
+
+.top-news .tn-title a,
+.cat-news .cn-title a,
+.main-news .mn-title a {
+    pointer-events: auto;
+}
+
 /* Hero slider: single slide, title overlay uses the existing .tn-title styling. */
 .top-news .tn-slider .tn-img img {
     aspect-ratio: 16 / 9;
     object-fit: cover;
+}
+
+/* The thumbnail link is inline, so its hit area collapses to the line box while the image paints much taller. */
+.top-news .tn-img > a {
+    display: block;
+}
+
+.top-news .tn-img > a img {
+    display: block;
+}
+
+/* A short mobile hero cannot hold a multi-line title over artwork that already has its own type. */
+@media (max-width: 767.98px) {
+    .top-news .tn-left .tn-title {
+        position: static;
+        background-image: none;
+        background: #111111;
+        padding: 12px 14px 14px;
+    }
 }
 
 .top-news .tn-right .tn-img img {
@@ -192,8 +234,32 @@
 
 /* Sermon page tag badges are links to the filtered library. */
 #tagContainer .badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-size: 0.85rem;
     padding: 0.45em 0.7em;
+}
+
+.main-news .library-item .badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+/* Bootstrap's md row puts the search and three selects on one line at 768px, which clips the option labels. */
+@media (max-width: 1199.98px) {
+    .library-controls > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    .library-controls > [class*="col-"]:not(:first-child) {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+    }
 }
 
 /* Library: server-rendered source list is hidden once the script takes over. */
@@ -210,6 +276,243 @@
     object-fit: cover;
 }
 
-.video-page-header h3 {
+.video-page-header h1 {
     margin-bottom: 4px;
+    font-size: 1.75rem;
+}
+
+.top-news .tn-title h1 {
+    margin: 0;
+    width: 100%;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+}
+
+.library-title,
+.contact h1,
+.missing-page h1 {
+    margin: 8px 0 20px;
+    font-size: 1.75rem;
+}
+
+.contact-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+
+.missing-page {
+    padding: 32px 0 64px;
+}
+
+.sermon-page h2 {
+    font-size: 1.5rem;
+}
+
+.skip-link {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+    text-decoration: underline;
+    transform: translateY(-150%);
+}
+
+.skip-link:focus {
+    transform: none;
+    color: #000000;
+}
+
+a:focus-visible,
+button:focus-visible,
+.form-control:focus-visible,
+.custom-select:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px #ffffff;
+}
+
+.navbar :focus-visible,
+.footer-bottom :focus-visible {
+    outline-color: #ffffff;
+    box-shadow: 0 0 0 4px #000000;
+}
+
+.form-control,
+.custom-select {
+    min-height: 44px;
+    color: #000000;
+}
+
+.contact-form button.btn {
+    min-height: 44px;
+    padding: 8px 18px;
+}
+
+.form-control::placeholder,
+.custom-select::placeholder {
+    color: #5c5c5c;
+}
+
+.contact-form form {
+    position: relative;
+}
+
+.contact-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: #000000;
+    font-size: 0.95rem;
+}
+
+.contact-form textarea.form-control {
+    height: auto;
+    min-height: 140px;
+}
+
+.contact-form [data-netlify-recaptcha] {
+    margin: 8px 0 16px;
+}
+
+.form-honeypot {
+    position: absolute;
+    margin: 0;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    padding: 0;
+    pointer-events: none;
+}
+
+.form-dev-note {
+    margin-bottom: 12px;
+    color: #333333;
+    font-size: 0.9rem;
+}
+
+.footer-bottom .template-by p a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #c0b0a0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.footer-legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.footer-legal a:hover,
+.footer-legal a:focus-visible {
+    color: #ffffff;
+}
+
+@media (max-width: 768.98px) {
+    .footer-legal {
+        justify-content: center;
+    }
+}
+
+.legal-document {
+    padding: 32px 0 64px;
+}
+
+.legal-document .container {
+    max-width: 760px;
+}
+
+/* 86% of an ultrawide viewport turns the hero and library into a billboard. Cap the shared container; tighter page rules still win. */
+@media (min-width: 1800px) {
+    .container {
+        max-width: 1600px;
+    }
+}
+
+@media (min-width: 992px) {
+    .sermon-page .container,
+    .missing-page {
+        max-width: min(86%, 760px);
+    }
+
+    .contact > .container {
+        max-width: min(86%, 1040px);
+    }
+}
+
+.summary-content,
+.sermon-page #mainPoints,
+.sermon-page #versesMentioned {
+    max-width: 65ch;
+}
+
+.legal-document h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.legal-document h2 {
+    font-size: 1.25rem;
+    margin-top: 28px;
+}
+
+.legal-document p,
+.legal-document li {
+    line-height: 1.6;
+}
+
+.legal-document ul {
+    padding-left: 1.25rem;
+    margin-bottom: 15px;
+}
+
+.legal-document a {
+    color: #3f342c;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.legal-document a:hover,
+.legal-document a:focus-visible {
+    color: #000000;
+}
+
+.legal-updated {
+    color: #333333;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

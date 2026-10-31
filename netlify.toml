@@ -1,5 +1,5 @@
 # Astro site only. Python sync runs on GitHub Actions; do not add a root
-# requirements.txt — Netlify always pip-installs it when present and that build
+# requirements.txt. Netlify always pip-installs it when present and that build
 # does not need Python.
 [build]
   command = "npm run build"

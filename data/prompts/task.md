@@ -2,7 +2,7 @@
 
 ### Sermon transcript
 
-Source text only — do not invent events or quotes not supported by this text.
+Source text only. Do not invent events or quotes not supported by this text.
 
 <sermon_transcript>
 {{SERMON_TRANSCRIPT}}
@@ -46,9 +46,9 @@ The three main ideas the speaker emphasized.
 - Include every verse referenced or clearly paraphrased, **in sermon order**.
 - Each object **must** use these keys (required by the website):
 
-  `verse` — reference (e.g. `John 3:16`)  
-  `version` — translation (default **NIV** if unclear)  
-  `text` — full verse text in that translation
+  `verse`: reference (e.g. `John 3:16`)  
+  `version`: translation (default **NIV** if unclear)  
+  `text`: full verse text in that translation
 
 - Escape quotes inside strings so the output is **valid JSON**.
 
@@ -63,6 +63,8 @@ The three main ideas the speaker emphasized.
 
 ## Output rules
 
-- Respond with **JSON only** — no markdown fences around the final answer, no preamble, no commentary after the JSON.
+- Respond with **JSON only**. No markdown fences around the final answer, no preamble, no commentary after the JSON.
+- Do not use em dashes. Use commas, periods, colons, parentheses, or hyphens.
+- If a quoted verse contains an em dash, replace that character with a comma or colon.
 - Do not include content that is not justified by the transcript (no fabricated stories or verses).
 - Produce **valid UTF-8 JSON** (standard escaping for quotes and newlines inside strings).

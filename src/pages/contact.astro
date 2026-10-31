@@ -2,39 +2,77 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Contact" activeNav="contact" description="Questions, feedback, or a bug report for Impact Recap.">
+<Base
+  title="Questions, Feedback, and Bug Reports"
+  activeNav="contact"
+  description="Send a question, correction, or bug report to the people who operate Impact Recap. The contact form is how to reach us about a sermon recap or the site."
+>
   <div class="contact content">
     <div class="container">
-      <div class="row align-items-center">
+      <h1>Contact</h1>
+      <div class="row align-items-start">
         <div class="col-md-8">
           <div class="contact-form">
-            <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/contact/?sent=1">
+            <form
+              name="contact"
+              method="POST"
+              action="/contact/?sent=1"
+              data-netlify="true"
+              netlify-honeypot="fax"
+              data-netlify-recaptcha="true"
+            >
               <input type="hidden" name="form-name" value="contact" />
-              <p class="d-none"><label>Leave this empty: <input name="bot-field" /></label></p>
+              <input
+                type="hidden"
+                name="subject"
+                value="[Jocal.dev] New inquiry - %{siteName} - #%{submissionId}"
+              />
+              <div class="form-honeypot" aria-hidden="true">
+                <label for="fax">Fax</label>
+                <input
+                  id="fax"
+                  type="text"
+                  name="fax"
+                  tabindex="-1"
+                  autocomplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                />
+              </div>
               <div class="form-row">
                 <div class="form-group col-md-6">
-                  <input type="text" name="name" id="name" class="form-control" placeholder="Your Name" required />
+                  <label for="name">Name</label>
+                  <input type="text" name="name" id="name" class="form-control" autocomplete="name" required />
                 </div>
                 <div class="form-group col-md-6">
-                  <input type="email" name="email" id="email" class="form-control" placeholder="Your Email" required />
+                  <label for="email">Email</label>
+                  <input type="email" name="email" id="email" class="form-control" autocomplete="email" required />
                 </div>
               </div>
               <div class="form-group">
-                <input type="text" name="subject" id="subject" class="form-control" placeholder="Subject" />
+                <label for="topic">Subject</label>
+                <input type="text" name="topic" id="topic" class="form-control" autocomplete="off" />
               </div>
               <div class="form-group">
-                <textarea class="form-control" name="message" id="message" rows="5" placeholder="Message" required></textarea>
+                <label for="message">Message</label>
+                <textarea class="form-control" name="message" id="message" rows="5" required></textarea>
               </div>
+              <div data-netlify-recaptcha="true"></div>
+              {import.meta.env.DEV && (
+                <p class="form-dev-note">
+                  The reCAPTCHA checkbox appears after a Netlify deploy. It does not show in local development.
+                </p>
+              )}
               <div><button class="btn" type="submit">Send Message</button></div>
             </form>
-            <p class="mt-3" data-sent-message hidden>Thanks, your message was sent.</p>
+            <p class="mt-3" data-sent-message role="status" hidden>Thanks, your message was sent.</p>
           </div>
         </div>
         <div class="col-md-4">
           <div class="contact-info">
-            <h3>About</h3>
+            <h2>About</h2>
             <p>
-              Impact Recap is an independent tool designed to help attendees of Impact Church engage more deeply with the sermons. While we are not affiliated with Impact Church, our goal is to make it easier for you to understand the key messages and apply them to your everyday life. Impact Recap is here to assist you in reflecting on each sermon's themes, ideas, and values so you can grow spiritually and integrate faith-based teachings into practical, daily actions. If you have any questions, feedback, or would like to report a bug please use the form on the left. God Bless!
+              Impact Recap is an independent tool designed to help attendees of Impact Church engage more deeply with the sermons. While we are not affiliated with Impact Church, our goal is to make it easier for you to understand the key messages and apply them to your everyday life. Impact Recap is here to assist you in reflecting on each sermon's themes, ideas, and values so you can grow spiritually and integrate faith-based teachings into practical, daily actions. If you have any questions, feedback, or would like to report a bug please use this form. God Bless!
             </p>
           </div>
         </div>

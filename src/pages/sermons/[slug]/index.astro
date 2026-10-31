@@ -15,7 +15,15 @@ const { sermon } = Astro.props;
 const { data } = sermon;
 ---
 
-<Base title={data.title} description={excerpt(data.summaryText)} image={data.thumbnailUrl}>
+<Base
+  title={data.title}
+  description={excerpt(data.summaryText)}
+  image={data.thumbnailUrl}
+  imageAlt={data.title}
+  ogType="article"
+  published={data.date}
+  bodyClass="sermon-page"
+>
   <div class="container mt-5">
     <div class="row">
       <div class="col-md-12">
@@ -31,7 +39,7 @@ const { data } = sermon;
           ></iframe>
         </div>
         <div class="video-page-header mt-3">
-          <h3>{data.title}</h3>
+          <h1>{data.title}</h1>
           <p class="mn-meta mb-0">
             {formatLongDate(data.date)}{data.speaker ? ` · ${data.speaker}` : ""}{data.duration ? ` · ${data.duration}` : ""}
           </p>
@@ -47,20 +55,20 @@ const { data } = sermon;
   </div>
 
   <div class="container mt-3">
-    <h3>Recap</h3>
+    <h2>Recap</h2>
     <div id="summaryText" class="summary-content">{data.summaryText}</div>
   </div>
 
   <div class="container mt-4">
     <div class="row">
       <div class="col-12 mb-3">
-        <h4>Main Points</h4>
+        <h2>Main Points</h2>
         <ul id="mainPoints">
           {data.mainPoints.map((p) => <li>{p}</li>)}
         </ul>
       </div>
       <div class="col-12">
-        <h4>Verses Mentioned</h4>
+        <h2>Verses Mentioned</h2>
         <div class="p-3 border border-dark">
           <ul id="versesMentioned">
             {data.versesMentioned.map((v) => (
@@ -73,7 +81,7 @@ const { data } = sermon;
   </div>
 
   <div class="container mt-4 mb-5">
-    <h4>Daily Action Plan</h4>
+    <h2>Daily Action Plan</h2>
     <Carousel class="daily-action-plan-slider" ariaLabel="Daily action plan">
       {WEEKDAYS.map((day) => {
         const d = data.dailyActionPlan[day];

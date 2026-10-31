@@ -9,11 +9,12 @@ const sidebar = rest.slice(0, 3);
 const recent = sermons.slice(4, 14);
 ---
 
-<Base activeNav="home" description="Missed a sermon? Watch, summarize, and plan to action now.">
+<Base activeNav="home" image={hero?.data.thumbnailUrl} imageAlt={hero?.data.title}>
   <div class="top-news">
     <div class="container">
       <div class="row">
         <div class="col-md-9 tn-left">
+          {!hero && <h1 class="library-title">Latest sermons</h1>}
           {hero && (
             <div class="tn-slider">
               <div class="tn-img">
@@ -21,7 +22,7 @@ const recent = sermons.slice(4, 14);
                   <img src={hero.data.thumbnailUrl} alt={hero.data.title} loading="eager" />
                 </a>
                 <div class="tn-title">
-                  <a href={sermonPath(hero)}>{hero.data.title}</a>
+                  <h1><a href={sermonPath(hero)}>{hero.data.title}</a></h1>
                 </div>
               </div>
             </div>

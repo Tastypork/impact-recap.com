@@ -1,10 +1,8 @@
 name: Sync sermons
 
 on:
-  schedule:
-    # Monday and Tuesday 07:00 UTC (00:00 Arizona, which has no DST). Tuesday catches late uploads.
-    - cron: "0 7 * * 1"
-    - cron: "0 7 * * 2"
+  # The weekly run is scripts/sync-sermons.sh on a home machine.
+  # GitHub-hosted runners are blocked by YouTube when fetching transcripts.
   workflow_dispatch:
     inputs:
       mode:

@@ -393,34 +393,43 @@ button.btn:hover {
 }
 
 .nav-bar .social {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0;
-    overflow: hidden;
 }
 
 .nav-bar .social a {
-    display: inline-block;
-    margin-left: 5px;
-    width: 44px;
-    height: 44px;
-    padding: 11px 0;
-    text-align: center;
-    font-size: 14px;
-    background: #C0B0A0;
-    border: 1px solid #ffffff;
-    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font-size: 26px;
+    line-height: 1;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.nav-bar .social a:hover {
+.nav-bar .social a:hover,
+.nav-bar .social a:focus-visible {
+    color: #8f7d6c;
     background: #ffffff;
-    border: 1px solid #ffffff;
+    border-color: #ffffff;
+    outline: none;
 }
 
 .nav-bar .social a i {
-    color: #ffffff;
+    color: inherit;
+    line-height: 1;
 }
 
-.nav-bar .social a:hover i {
-    color: #C0B0A0;
+.nav-bar .social a .fa-facebook-f {
+    font-size: 1.12em;
 }
 
 

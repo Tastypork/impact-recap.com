@@ -1,0 +1,18 @@
+# IMPACT Recap
+
+> Independent sermon recaps for Impact Church messages: a summary, main points, verses, and a six-day action plan for each sermon. This site is not affiliated with Impact Church.
+
+This file is a short map of the public site. It does not control crawling, and it is not a promise that the site will be indexed or cited.
+
+## Pages
+
+- [Home](https://impact-recap.com/): Latest sermons
+- [Library](https://impact-recap.com/library/): Browse and search every sermon recap
+- [Contact](https://impact-recap.com/contact/): Questions, corrections, and bug reports
+- [Privacy Policy](https://impact-recap.com/privacy/)
+- [Terms and Conditions](https://impact-recap.com/terms/)
+- [Accessibility](https://impact-recap.com/accessibility/)
+
+Individual sermon pages use this pattern: https://impact-recap.com/sermons/<date>_<videoId>/
+
+The library is the index of those pages.

@@ -2,15 +2,25 @@
 const year = new Date().getFullYear();
 ---
 
-<div class="footer-bottom">
+<footer class="footer-bottom">
   <div class="container">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col-md-6 copyright">
-        <p>{year}&copy; Powered by jocal AI</p>
+        <p>&copy; {year} Impact Recap</p>
       </div>
       <div class="col-md-6 template-by">
-        <p>All Rights Reserved by jocal.dev</p>
+        <p>
+          <a href="https://jocal.dev" target="_blank" rel="noopener noreferrer">
+            Web design done by Jocal®
+            <span class="sr-only">(opens in a new tab)</span>
+          </a>
+        </p>
       </div>
     </div>
+    <nav class="footer-legal" aria-label="Legal">
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/terms/">Terms and Conditions</a>
+      <a href="/accessibility/">Accessibility</a>
+    </nav>
   </div>
-</div>
+</footer>

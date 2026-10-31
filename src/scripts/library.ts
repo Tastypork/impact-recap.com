@@ -9,6 +9,8 @@ type Item = {
   tags: string[];
 };
 
+const libraryReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -103,11 +105,17 @@ function init(root: HTMLElement): void {
     b.type = "button";
     b.textContent = label;
     b.disabled = disabled;
-    if (active) b.classList.add("is-active");
+    if (label === "Prev") b.setAttribute("aria-label", "Previous page");
+    else if (label === "Next") b.setAttribute("aria-label", "Next page");
+    else b.setAttribute("aria-label", `Page ${label}`);
+    if (active) {
+      b.classList.add("is-active");
+      b.setAttribute("aria-current", "page");
+    }
     b.addEventListener("click", () => {
       page = target;
       render();
-      results.scrollIntoView({ behavior: "smooth", block: "start" });
+      results.scrollIntoView({ behavior: libraryReducedMotion ? "instant" : "smooth", block: "start" });
     });
     return b;
   };

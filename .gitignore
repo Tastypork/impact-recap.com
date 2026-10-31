@@ -25,6 +25,21 @@ data/*.db
 data/*.db-*
 data/*.sqlite
 
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editor and OS clutter
+.DS_Store
+Thumbs.db
+
+# Local tooling (not required to build the site)
+.cursor/
+.impeccable/
+.playwright-mcp/
+pytest-cache-files-*/
+
 # Scratch
 *.log
 *.tmp

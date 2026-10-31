@@ -40,10 +40,18 @@ def test_was_live_skip_reason():
     assert vu._was_live_skip_reason({}) is None
 
 
+def test_privacy_skip_reason():
+    assert vu._privacy_skip_reason({"status": {"privacyStatus": "unlisted"}})
+    assert vu._privacy_skip_reason({"status": {"privacyStatus": "private"}})
+    assert vu._privacy_skip_reason({"status": {"privacyStatus": "public"}}) is None
+    assert vu._privacy_skip_reason({}) is None
+
+
 def test_skip_reason_combines_checks():
     base = {"snippet": {"liveBroadcastContent": "none"}, "contentDetails": {"duration": "PT50M"}}
     assert vu._skip_reason(base) is None
     assert vu._skip_reason({**base, "liveStreamingDetails": {"actualStartTime": "2026-04-05T18:00:00Z"}})
+    assert vu._skip_reason({**base, "status": {"privacyStatus": "unlisted"}})
 
 
 def test_short_video_skip_reason():
@@ -151,6 +159,25 @@ def test_write_sermon_file_roundtrip(content_dir, tags_file):
     assert data["speaker"] is None
     assert data["duration"] is None
     assert vu.SermonRecord.model_validate(data) == rec
+
+
+def test_write_sermon_file_replaces_em_dashes(content_dir, tags_file):
+    content = _valid_content()
+    content["summaryText"] = "Faith \u2014 and practice."
+    rec = vu.SermonRecord(
+        **content,
+        videoId="aaaaaaaaaaa",
+        title="A \u2014 B",
+        date="2024-01-01",
+        thumbnailUrl="https://i.ytimg.com/vi/aaaaaaaaaaa/maxresdefault.jpg",
+        videoUrl="https://www.youtube.com/embed/aaaaaaaaaaa",
+    )
+    path = vu.write_sermon_file(rec)
+    raw = open(path, encoding="utf-8").read()
+    assert "\u2014" not in raw
+    data = json.loads(raw)
+    assert data["summaryText"] == "Faith, and practice."
+    assert data["title"] == "A, B"
 
 
 def test_needs_metadata():

@@ -179,11 +179,31 @@ def load_sermon_file(path: str) -> dict[str, Any]:
         return json.load(f)
 
 
+def replace_em_dashes(value: str) -> str:
+    """The public site does not use em dashes. Future syncs keep that rule."""
+    text = re.sub(r"[ \t]*\u2014[ \t]*", ", ", value)
+    text = re.sub(r"[ \t]+,", ",", text)
+    text = re.sub(r",(?:[ \t]*,)+", ",", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r"^,[ \t]*", "", text)
+    return text.rstrip()
+
+
+def _without_em_dashes(value: Any) -> Any:
+    if isinstance(value, str):
+        return replace_em_dashes(value)
+    if isinstance(value, list):
+        return [_without_em_dashes(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _without_em_dashes(item) for key, item in value.items()}
+    return value
+
+
 def write_sermon_file(record: SermonRecord) -> str:
     os.makedirs(CONTENT_DIR, exist_ok=True)
     path = os.path.join(CONTENT_DIR, f"{sermon_slug(record.date, record.videoId)}.json")
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(record.model_dump(), f, indent=2, ensure_ascii=False)
+        json.dump(_without_em_dashes(record.model_dump()), f, indent=2, ensure_ascii=False)
         f.write("\n")
     return path
 
@@ -250,10 +270,18 @@ def _was_live_skip_reason(item: dict[str, Any]) -> Optional[str]:
     return None
 
 
+def _privacy_skip_reason(item: dict[str, Any]) -> Optional[str]:
+    privacy = ((item.get("status") or {}).get("privacyStatus") or "").lower()
+    if privacy and privacy != "public":
+        return f"{privacy} video"
+    return None
+
+
 def _skip_reason(item: dict[str, Any]) -> Optional[str]:
     return (
         _broadcast_skip_reason(item["snippet"])
         or _was_live_skip_reason(item)
+        or _privacy_skip_reason(item)
         or _short_video_skip_reason(item.get("contentDetails", {}))
     )
 
@@ -288,7 +316,7 @@ def select_first_n_non_broadcast_ids(
         batch = ordered_candidate_ids[i : i + 50]
         i += 50
         params = {
-            "part": "snippet,contentDetails,liveStreamingDetails",
+            "part": "snippet,contentDetails,status,liveStreamingDetails",
             "id": ",".join(batch),
             "key": api_key,
         }
@@ -366,7 +394,7 @@ def fetch_video_metadata(video_id: str, *, api_key: str) -> tuple[Optional[dict[
     skip_reason set => policy says do not ingest. Both None => API failure.
     """
     url = "https://www.googleapis.com/youtube/v3/videos"
-    params = {"part": "snippet,contentDetails,liveStreamingDetails", "id": video_id, "key": api_key}
+    params = {"part": "snippet,contentDetails,status,liveStreamingDetails", "id": video_id, "key": api_key}
     response = youtube_data_api_session().get(url, params=params, timeout=30)
     if response.status_code != 200:
         err = response.text[:500]

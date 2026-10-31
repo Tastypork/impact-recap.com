@@ -1,5 +1,7 @@
 // Shared page behaviour: navbar toggle, sticky nav, back-to-top, carousels.
 
+const pageReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function initNav(): void {
   const toggle = document.querySelector<HTMLButtonElement>("[data-nav-toggle]");
   const panel = document.getElementById("navbarCollapse");
@@ -28,7 +30,7 @@ function initScrollEffects(): void {
   update();
   backToTop?.addEventListener("click", (e) => {
     e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: pageReduceMotion ? "instant" : "smooth" });
   });
 }
 
@@ -65,7 +67,10 @@ function initCarousel(root: HTMLElement): void {
 
   const scrollToIndex = (i: number, instant = false) => {
     index = Math.min(Math.max(i, 0), lastIndex());
-    track.scrollTo({ left: Math.min(index * slideWidth(), maxScroll()), behavior: instant ? "instant" : "smooth" });
+    track.scrollTo({
+      left: Math.min(index * slideWidth(), maxScroll()),
+      behavior: instant || pageReduceMotion ? "instant" : "smooth",
+    });
   };
 
   const go = (dir: 1 | -1) => {
@@ -93,7 +98,7 @@ function initCarousel(root: HTMLElement): void {
   window.addEventListener("resize", updateButtons);
   updateButtons();
 
-  if (autoplayMs > 0) {
+  if (autoplayMs > 0 && !pageReduceMotion) {
     let timer: number | undefined;
     const start = () => {
       stop();
