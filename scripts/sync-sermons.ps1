@@ -164,7 +164,7 @@ try {
     & $python -m pip install -q -r requirements-sync.txt
     if ($LASTEXITCODE -ne 0) { throw "pip install failed ($LASTEXITCODE)" }
 
-    & $python video_sync.py --mode incremental -n 3
+    & $python video_sync.py --mode incremental
     $syncStatus = $LASTEXITCODE
 
     Commit-PendingSermons
