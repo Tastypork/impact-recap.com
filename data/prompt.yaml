@@ -2,7 +2,6 @@
 # Paths are relative to this file's directory (data/).
 model: claude-sonnet-5-5
 max_tokens: 4096
-temperature: 0.6
 system_file: prompts/system.md
 user_blocks:
   - prompts/example.md

@@ -688,9 +688,11 @@ def send_to_ai(
         log.error("claude_token missing in config")
         return None
     client = anthropic.Anthropic(api_key=api_key)
+    # Current Claude models reject `temperature` (400 invalid_request_error).
+    anthropic_payload = {k: v for k, v in message_data.items() if k != "temperature"}
     try:
         message = _with_rate_limit_backoff(
-            lambda: client.messages.create(**message_data),
+            lambda: client.messages.create(**anthropic_payload),
             lambda e: isinstance(e, anthropic.RateLimitError),
         )
     except RateLimited:
