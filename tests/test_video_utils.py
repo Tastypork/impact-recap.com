@@ -50,7 +50,9 @@ def test_privacy_skip_reason():
 def test_skip_reason_combines_checks():
     base = {"snippet": {"liveBroadcastContent": "none"}, "contentDetails": {"duration": "PT50M"}}
     assert vu._skip_reason(base) is None
-    assert vu._skip_reason({**base, "liveStreamingDetails": {"actualStartTime": "2026-04-05T18:00:00Z"}})
+    recorded = {**base, "liveStreamingDetails": {"actualStartTime": "2026-04-05T18:00:00Z"}}
+    assert vu._skip_reason(recorded) is None
+    assert vu._was_live_skip_reason(recorded)
     assert vu._skip_reason({**base, "status": {"privacyStatus": "unlisted"}})
 
 
@@ -209,7 +211,7 @@ def mocked_pipeline(content_dir, tags_file, monkeypatch):
     state = {"ai_text": json.dumps(_valid_content())}
     monkeypatch.setattr(vu, "load_app_config", lambda: {"yt_token": "k", "claude_token": "c"})
     monkeypatch.setattr(vu, "fetch_video_metadata", lambda vid, api_key: (dict(meta), None))
-    monkeypatch.setattr(vu, "get_transcript", lambda vid: "transcript text")
+    monkeypatch.setattr(vu, "get_transcript", lambda vid: ("transcript text", None))
     monkeypatch.setattr(vu, "send_to_ai", lambda *a, **k: [vu.AiTextBlock(state["ai_text"])])
     return state
 
@@ -248,9 +250,52 @@ def test_ingest_video_bad_model_output_keeps_existing(mocked_pipeline, content_d
 
 
 def test_ingest_video_no_transcript(mocked_pipeline, content_dir, monkeypatch):
-    monkeypatch.setattr(vu, "get_transcript", lambda vid: None)
+    monkeypatch.setattr(vu, "get_transcript", lambda vid: (None, None))
     assert vu.ingest_video("aaaaaaaaaaa") is vu.IngestResult.SKIPPED_NO_TRANSCRIPT
     assert list(content_dir.iterdir()) == []
+    assert vu.permanently_skipped_reason("aaaaaaaaaaa") is None
+
+
+def test_ingest_recorded_live_without_transcript_is_logged(mocked_pipeline, content_dir, monkeypatch, tmp_path):
+    monkeypatch.setattr(vu, "SKIPPED_DIR", str(tmp_path / "skipped"))
+    monkeypatch.setattr(
+        vu,
+        "fetch_video_metadata",
+        lambda vid, api_key: (
+            {
+                "videoId": vid,
+                "title": "Hope Rising",
+                "speaker": "Pastor Jane",
+                "date": "2024-01-01",
+                "duration": "0:45:00",
+                "thumbnailUrl": "https://i.ytimg.com/vi/aaaaaaaaaaa/maxresdefault.jpg",
+                "videoUrl": "https://www.youtube.com/embed/aaaaaaaaaaa",
+                "wasLive": True,
+            },
+            None,
+        ),
+    )
+    monkeypatch.setattr(vu, "get_transcript", lambda vid: (None, None))
+    assert vu.ingest_video("aaaaaaaaaaa") is vu.IngestResult.SKIPPED_LIVE_OR_BROADCAST
+    assert "recorded live" in (vu.permanently_skipped_reason("aaaaaaaaaaa") or "")
+    assert vu.ingest_video("aaaaaaaaaaa") is vu.IngestResult.SKIPPED_LIVE_OR_BROADCAST
+
+
+def test_ingest_disabled_subtitles_is_logged(mocked_pipeline, content_dir, monkeypatch, tmp_path):
+    monkeypatch.setattr(vu, "SKIPPED_DIR", str(tmp_path / "skipped"))
+    monkeypatch.setattr(vu, "get_transcript", lambda vid: (None, "subtitles are disabled"))
+    assert vu.ingest_video("aaaaaaaaaaa") is vu.IngestResult.SKIPPED_LIVE_OR_BROADCAST
+    assert vu.permanently_skipped_reason("aaaaaaaaaaa") == "subtitles are disabled"
+    assert vu.ingest_video("aaaaaaaaaaa") is vu.IngestResult.SKIPPED_LIVE_OR_BROADCAST
+
+
+def test_permanent_transcript_reason_matches_disabled_subtitles():
+    class TranscriptsDisabled(Exception):
+        pass
+
+    assert vu._permanent_transcript_reason(TranscriptsDisabled("nope")) == "subtitles are disabled"
+    assert vu._permanent_transcript_reason(Exception("Subtitles are disabled for this video")) == "subtitles are disabled"
+    assert vu._permanent_transcript_reason(Exception("Request blocked")) is None
 
 
 def test_ingest_video_policy_skip(mocked_pipeline, content_dir, monkeypatch):

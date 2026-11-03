@@ -19,6 +19,7 @@ from video_utils import (
     fetch_video_metadata,  # noqa: F401  (re-exported for tests/tools)
     ingest_video,
     ingested_video_ids,
+    permanently_skipped_video_ids,
     list_sermon_files,
     load_app_config,
     load_sermon_file,
@@ -142,12 +143,14 @@ def sync_channel_videos(
     all_ids = fetch_all_channel_playlist_video_ids(channel_id, api_key)
     log.info("Channel playlists produced %d unique video ids.", len(all_ids))
     existing = ingested_video_ids()
+    logged_skips = permanently_skipped_video_ids()
     log.info("%d sermons already in content/.", len(existing))
+    log.info("%d recorded live/premiere video(s) logged as untranscribable.", len(logged_skips))
 
     if mode == "full":
         to_process = list(all_ids)
     else:
-        to_process = [vid for vid in all_ids if vid not in existing]
+        to_process = [vid for vid in all_ids if vid not in existing and vid not in logged_skips]
     log.info("%s: %d candidate video(s).", mode, len(to_process))
 
     if limit is not None:

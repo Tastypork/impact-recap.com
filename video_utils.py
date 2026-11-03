@@ -35,6 +35,7 @@ TAGS_FILE = "data/tags.yml"
 DEFAULT_PROMPT_FILE = "data/prompt.yaml"
 CONTENT_DIR = "content/sermons"
 FAILED_DIR = "data/failed"
+SKIPPED_DIR = "data/skipped"
 MIN_VIDEO_DURATION_SECONDS = 25 * 60
 WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
@@ -242,6 +243,36 @@ def _clear_failed(video_id: str) -> None:
         pass
 
 
+def _skipped_path(video_id: str) -> str:
+    return os.path.join(SKIPPED_DIR, f"{video_id}.txt")
+
+
+def permanently_skipped_reason(video_id: str) -> Optional[str]:
+    """Recorded live/premiere videos that could not be transcribed. Other failures are not stored here."""
+    path = _skipped_path(video_id)
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return f.read().strip() or "recorded live stream or premiere with no transcript"
+
+
+def permanently_skipped_video_ids() -> set[str]:
+    out: set[str] = set()
+    for path in glob.glob(os.path.join(SKIPPED_DIR, "*.txt")):
+        vid = os.path.basename(path)[:-4]
+        if vid:
+            out.add(vid)
+    return out
+
+
+def _write_permanent_skip(video_id: str, reason: str) -> str:
+    os.makedirs(SKIPPED_DIR, exist_ok=True)
+    path = _skipped_path(video_id)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(reason.rstrip() + "\n")
+    return path
+
+
 # --------------------------------------------------------------------------- youtube data api
 
 
@@ -278,9 +309,9 @@ def _privacy_skip_reason(item: dict[str, Any]) -> Optional[str]:
 
 
 def _skip_reason(item: dict[str, Any]) -> Optional[str]:
+    """Active broadcasts, private videos, and shorts. Finished live recordings are tried for a transcript."""
     return (
         _broadcast_skip_reason(item["snippet"])
-        or _was_live_skip_reason(item)
         or _privacy_skip_reason(item)
         or _short_video_skip_reason(item.get("contentDetails", {}))
     )
@@ -417,6 +448,7 @@ def fetch_video_metadata(video_id: str, *, api_key: str) -> tuple[Optional[dict[
         return None, skip
 
     name, speaker = _split_title(snippet["title"])
+    was_live = _was_live_skip_reason(item) is not None
     date = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00")).strftime("%Y-%m-%d")
     return (
         {
@@ -427,6 +459,7 @@ def fetch_video_metadata(video_id: str, *, api_key: str) -> tuple[Optional[dict[
             "duration": str(isodate.parse_duration(content_details["duration"])),
             "thumbnailUrl": _pick_thumbnail(snippet.get("thumbnails", {})),
             "videoUrl": f"https://www.youtube.com/embed/{video_id}",
+            "wasLive": was_live,
         },
         None,
     )
@@ -453,18 +486,25 @@ def _ip_block_hint() -> None:
     )
 
 
-def _fetch_transcript_once(video_id: str) -> Optional[str]:
+def _permanent_transcript_reason(exc: BaseException) -> Optional[str]:
+    """Disabled captions will not appear on a later run. Blocks and missing tracks might."""
+    if type(exc).__name__ == "TranscriptsDisabled" or "Subtitles are disabled" in str(exc):
+        return "subtitles are disabled"
+    return None
+
+
+def _fetch_transcript_once(video_id: str) -> tuple[Optional[str], Optional[str]]:
     api = _youtube_transcript_api_client()
     try:
         tl = api.list(video_id)
     except PoTokenRequired:
         log.warning("%s: PoTokenRequired from youtube-transcript-api", video_id)
-        return None
+        return None, None
     except CouldNotRetrieveTranscript as e:
         log.warning("%s: transcript list failed: %s", video_id, e)
         if isinstance(e, (IpBlocked, RequestBlocked)):
             _ip_block_hint()
-        return None
+        return None, _permanent_transcript_reason(e)
 
     ft = None
     try:
@@ -476,37 +516,45 @@ def _fetch_transcript_once(video_id: str) -> Optional[str]:
                 if ft and len(ft) > 0:
                     log.info("%s: using %s transcript", video_id, tr.language_code)
                     break
-            except (CouldNotRetrieveTranscript, PoTokenRequired):
+            except (CouldNotRetrieveTranscript, PoTokenRequired) as e:
+                disabled = _permanent_transcript_reason(e)
+                if disabled:
+                    return None, disabled
                 continue
             except Exception:
                 continue
     except PoTokenRequired:
-        return None
+        return None, None
     except CouldNotRetrieveTranscript as e:
         log.warning("%s: transcript fetch failed: %s", video_id, e)
         if isinstance(e, (IpBlocked, RequestBlocked)):
             _ip_block_hint()
-        return None
+        return None, _permanent_transcript_reason(e)
 
     if not ft or len(ft) == 0:
-        return None
+        return None, None
     text = " ".join(s.text for s in ft.snippets).strip()
-    return text or None
+    return text or None, None
 
 
-def get_transcript(video_id: str, *, max_retries: int = 3) -> Optional[str]:
+def get_transcript(video_id: str, *, max_retries: int = 3) -> tuple[Optional[str], Optional[str]]:
+    """Returns (text, permanent_skip_reason). A reason means later runs should not retry."""
+    permanent: Optional[str] = None
     for attempt in range(1, max_retries + 1):
         try:
-            text = _fetch_transcript_once(video_id)
+            text, permanent = _fetch_transcript_once(video_id)
         except Exception as e:
             log.warning("%s: unexpected transcript error: %s", video_id, e)
-            text = None
+            text, permanent = None, _permanent_transcript_reason(e)
         if text:
-            return text
+            return text, None
+        if permanent:
+            log.info("%s: %s", video_id, permanent)
+            return None, permanent
         if attempt < max_retries:
             time.sleep(2)
     log.warning("%s: no transcript after %d attempts", video_id, max_retries)
-    return None
+    return None, None
 
 
 # --------------------------------------------------------------------------- prompt
@@ -748,6 +796,11 @@ def ingest_video(
         log.info("%s already ingested (%s); skipping", video_id, existing)
         return IngestResult.SKIPPED_ALREADY_EXISTS
 
+    logged_skip = permanently_skipped_reason(video_id)
+    if logged_skip and not force_regenerate:
+        log.info("%s skipped: %s", video_id, logged_skip)
+        return IngestResult.SKIPPED_LIVE_OR_BROADCAST
+
     meta, skip = fetch_video_metadata(video_id, api_key=cfg["yt_token"])
     if skip:
         log.info("%s skipped: %s", video_id, skip)
@@ -755,9 +808,15 @@ def ingest_video(
     if not meta:
         return IngestResult.FAILED
 
-    transcript = get_transcript(video_id)
+    was_live = bool(meta.pop("wasLive", False))
+    transcript, transcript_skip = get_transcript(video_id)
     if not transcript:
-        log.info("%s skipped: no retrievable transcript", video_id)
+        reason = transcript_skip or ("recorded live stream or premiere with no transcript" if was_live else None)
+        if reason:
+            path = _write_permanent_skip(video_id, reason)
+            log.info("%s skipped: %s (logged %s)", video_id, reason, path)
+            return IngestResult.SKIPPED_LIVE_OR_BROADCAST
+        log.info("%s skipped: no retrievable transcript; will retry next run", video_id)
         return IngestResult.SKIPPED_NO_TRANSCRIPT
 
     log.info("%s: requesting summary from model", video_id)
