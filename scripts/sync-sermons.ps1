@@ -97,6 +97,14 @@ function Commit-PendingSermons {
     Invoke-Git commit -m "Sync sermons (incremental)"
 }
 
+function Commit-AllChanges {
+    Invoke-Git add -A
+    & git diff --cached --quiet
+    if ($LASTEXITCODE -eq 0) { return }
+    if ($LASTEXITCODE -gt 1) { throw "git diff failed ($LASTEXITCODE)" }
+    Invoke-Git commit -m "Sync sermons (incremental)"
+}
+
 function Push-IfAhead {
     Invoke-Git fetch origin $Branch
     $head = (& git rev-parse HEAD).Trim()
@@ -167,7 +175,7 @@ try {
     & $python video_sync.py --mode incremental
     $syncStatus = $LASTEXITCODE
 
-    Commit-PendingSermons
+    Commit-AllChanges
     Invoke-Git pull --rebase origin $Branch
     Push-IfAhead
 
