@@ -700,12 +700,20 @@ def send_to_ai(
     except Exception as e:
         log.error("Anthropic request failed: %s", e)
         return None
-    log.info("Anthropic usage: %s", message.usage)
-    out = [AiTextBlock(getattr(b, "text", str(b))) for b in message.content]
+    log.info("Anthropic usage: %s stop_reason=%s", message.usage, getattr(message, "stop_reason", None))
+    if getattr(message, "stop_reason", None) == "max_tokens":
+        log.error("Anthropic response hit max_tokens before finishing")
+    out = [
+        AiTextBlock(b.text)
+        for b in message.content
+        if getattr(b, "type", None) == "text" and isinstance(getattr(b, "text", None), str)
+    ]
     return out or None
 
 
 def _extract_ai_json_dict(ai_text: str) -> Optional[dict[str, Any]]:
+    if not isinstance(ai_text, str):
+        return None
     m = re.search(r"\{.*\}", ai_text, re.DOTALL)
     if not m:
         return None
